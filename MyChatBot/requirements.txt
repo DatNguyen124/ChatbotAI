@@ -1,0 +1,6 @@
+openai
+llama-index
+unstructured
+nest-asyncio
+chainlit
+PyMuPDF
