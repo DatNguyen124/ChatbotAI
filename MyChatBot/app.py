@@ -1,6 +1,5 @@
 import os
 import openai
-import json
 import fitz  # PyMuPDF for reading PDFs
 from pathlib import Path
 from llama_index.core import VectorStoreIndex, StorageContext, Document
@@ -11,24 +10,12 @@ from llama_index.agent.openai import OpenAIAgent
 from llama_index.core import load_index_from_storage
 import chainlit as cl
 
-# Set your OpenAI API key
+# Import chat store and memory buffer
+from llama_index.core.storage.chat_store import SimpleChatStore
+from llama_index.core.memory import ChatMemoryBuffer
+
 os.environ["OPENAI_API_KEY"] = "sk-j0X3snByBRXjyJXKG_urCfefY2ANGbKzexJWCaTg2bT3BlbkFJaHBWZOUCk3lWTaxHhVOsHgU5V99JkPPn9a3Yk2Qv0A"
 openai.api_key = os.environ["OPENAI_API_KEY"]
-
-# Memory management
-memory = []
-
-# Load memory from a JSON file
-def load_memory(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            return json.load(file)
-    return []
-
-# Save memory to a JSON file
-def save_memory(file_path, memory):
-    with open(file_path, 'w') as file:
-        json.dump(memory, file)
 
 # Function to read PDFs and convert them to Document objects
 def read_pdf(file_path):
@@ -48,11 +35,10 @@ def load_documents_from_folder(folder_path):
         file_path = Path(folder_path) / file_name
         if file_path.suffix == '.pdf':
             documents.extend(read_pdf(file_path))
-        # You can handle other file types here if needed
     return documents
 
 # Set the data folder path
-data_folder_path = "C:/Users/nguye/OneDrive/Documents/GitHub/ChatbotAI/MyChatBot/data"
+data_folder_path = "C:/Users/nguye/OneDrive/Documents/GitHub/ChatbotAI/MyChatBot/data"  # Update this path as necessary
 documents = load_documents_from_folder(data_folder_path)
 
 # Create a storage context and index the documents
@@ -67,7 +53,7 @@ index = load_index_from_storage(storage_context)
 # Create a query engine tool
 query_engine_tool = QueryEngineTool(
     query_engine=index.as_query_engine(),
-    metadata=ToolMetadata(name="general_index", description="Index for various document types")
+    metadata=ToolMetadata(name="index", description="Index for various document types")
 )
 
 # Setup the query engine
@@ -76,48 +62,49 @@ query_engine = SubQuestionQueryEngine.from_defaults(
     llm=OpenAI(model="gpt-4o-mini")
 )
 
-# Initialize the chatbot agent
 tools = [query_engine_tool]
-agent = OpenAIAgent.from_tools(tools, verbose=True)
 
-# Memory file path
-memory_file_path = "memory.json"
-memory = load_memory(memory_file_path)
+# Load or initialize chat store
+persist_path = "C:/Users/nguye/OneDrive/Documents/GitHub/ChatbotAI/MyChatBot/chat_store.json"
+if os.path.exists(persist_path):
+    chat_store = SimpleChatStore.from_persist_path(persist_path)
+else:
+    chat_store = SimpleChatStore()
+
+chat_memory = ChatMemoryBuffer.from_defaults(
+    token_limit = 3000,
+    chat_store = chat_store,
+    chat_store_key = "user1",
+)
+
+# Initialize the chatbot agent with memory
+agent = OpenAIAgent.from_tools(tools, memory=chat_memory, verbose=True)
 
 @cl.on_chat_start
 async def chat_start():
-    await cl.Message(content="Welcome! Ask me anything about Vietnamese meals you want to cook.").send()
+    await cl.Message(content="Welcome! Ask me anything about Vietnamese meals you want to cook").send()
 
 @cl.on_message
 async def main(message: cl.Message):
-    global memory
+    content = message.content
+    response = agent.chat(content)
+    
+    # Print the response to the chat
+    await cl.Message(content=str(response)).send()
 
-    # Extract the message content properly
-    user_input = message.content  # Use the correct attribute
 
-    # Store user input in memory
-    memory.append({"user": user_input})
+    # Save chat history after each message
+    try:
+        chat_store.persist(persist_path=persist_path)
+        print("Chat history saved to disk")
+    except Exception as e:
+        print(f"Error saving chat history: {e}")
+    
 
-    # Generate response from the agent
-    response = agent.chat(user_input)
+# Save chat history on shutdown
+import atexit
 
-    # Extract the text from the response object (adjust based on your agent's API)
-    response_text = response.text if hasattr(response, 'text') else str(response)
-
-    # Store the bot's response in memory
-    memory.append({"bot": response_text})
-
-    # Save updated memory to file
-    save_memory(memory_file_path, memory)
-
-    # Send the response back to the user
-    await cl.Message(content=response_text).send()
-
-# Optional: Cleanup old memories to manage memory size
-def clean_up_memory(max_size=10):
-    """Remove old memories if memory exceeds max size."""
-    if len(memory) > max_size:
-        memory = memory[-max_size:]  # Keep only the most recent memories
-        save_memory(memory_file_path, memory)  # Save cleaned memory
-
-# Call clean_up_memory after saving memory to manage size
+@atexit.register
+def save_chat_history():
+    chat_store.persist(persist_path=persist_path)
+    print("Chat history saved to disk")

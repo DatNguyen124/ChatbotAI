@@ -4,3 +4,4 @@ unstructured
 nest-asyncio
 chainlit
 PyMuPDF
+unstructured

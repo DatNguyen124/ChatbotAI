@@ -1,0 +1,16 @@
+/* styles.css */
+.chat-message {
+    border-radius: 10px;
+    padding: 10px;
+    margin: 5px;
+}
+
+.user-message {
+    background-color: #d1e7dd; /* Light green background for user messages */
+    text-align: right; /* Align user messages to the right */
+}
+
+.bot-message {
+    background-color: #f8d7da; /* Light red background for bot messages */
+    text-align: left; /* Align bot messages to the left */
+}
