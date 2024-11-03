@@ -10,7 +10,7 @@ from llama_index.agent.openai import OpenAIAgent
 from llama_index.core import load_index_from_storage  # Add this import
 import chainlit as cl
 
-os.environ["OPENAI_API_KEY"] = "sk-j0X3snByBRXjyJXKG_urCfefY2ANGbKzexJWCaTg2bT3BlbkFJaHBWZOUCk3lWTaxHhVOsHgU5V99JkPPn9a3Yk2Qv0A"
+os.environ["OPENAI_API_KEY"] = "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"
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # Function to read PDFs and convert them to Document objects
