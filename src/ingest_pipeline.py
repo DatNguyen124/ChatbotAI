@@ -1,11 +1,11 @@
 # ingest_pipeline.py
-
 import os
 from pathlib import Path
-import fitz  # PyMuPDF for reading PDFs
-from llama_index.core import Document
+#import fitz  # PyMuPDF for reading PDFs
+from llama_index.core import Document, SimpleDirectoryReader
 
 # Function to read PDFs and convert them to Document objects
+'''
 def read_pdf(file_path):
     documents = []
     with fitz.open(file_path) as pdf:
@@ -23,4 +23,9 @@ def load_documents_from_folder(folder_path):
         file_path = Path(folder_path) / file_name
         if file_path.suffix == '.pdf':
             documents.extend(read_pdf(file_path))
+    return documents
+'''
+def load_documents_from_folder(folder_path):
+    reader = SimpleDirectoryReader(folder_path)
+    documents = reader.load_data()
     return documents
