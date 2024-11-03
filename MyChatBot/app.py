@@ -1,9 +1,6 @@
 import os
 import openai
-
-from llama_index.llms.openai import OpenAI
-
-from llama_index.agent.openai import OpenAIAgent
+from dotenv import load_dotenv
 import chainlit as cl
 import atexit
 
@@ -11,12 +8,14 @@ from src.global_settings import CONVERSATION_FILE
 from src.chat_store import save_chat_store
 from src.handle_conversation import initialize_chatbot
 
-os.environ["OPENAI_API_KEY"] = "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"
-openai.api_key = os.environ["OPENAI_API_KEY"]
+# Load environment variables from .env file
+load_dotenv()
 
+# Get the OpenAI API key from the environment variable
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize chatbot with memory and query engine
-chatbot = initialize_chatbot(os.environ["OPENAI_API_KEY"])
+chatbot = initialize_chatbot(openai_api_key)
 
 
 @cl.on_chat_start

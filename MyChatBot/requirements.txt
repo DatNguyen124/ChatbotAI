@@ -5,3 +5,4 @@ nest-asyncio
 chainlit
 PyMuPDF
 unstructured
+python-dotenv

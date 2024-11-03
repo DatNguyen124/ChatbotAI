@@ -17,12 +17,11 @@ def display_messages(messages):
     for message in messages:
         print(f"{message['timestamp']}: {message['sender']}: {message['text']}")
 
-def initialize_chatbot(api_key, data_folder_path = STORAGE_PATH, persist_path = CONVERSATION_FILE, model="gpt-4o-mini", token_limit=3000, chat_store_key="user1"):
-    
+def initialize_chatbot(api_key):
     openai.api_key = api_key
     
     # Load all documents from the specified directory
-    documents = load_documents_from_folder(data_folder_path)
+    documents = load_documents_from_folder(STORAGE_PATH)
     
     # Create a storage context and index the documents
     storage_context = StorageContext.from_defaults()
@@ -41,19 +40,19 @@ def initialize_chatbot(api_key, data_folder_path = STORAGE_PATH, persist_path = 
     # Setup the query engine
     query_engine = SubQuestionQueryEngine.from_defaults(
         query_engine_tools=[query_engine_tool],
-        llm=OpenAI(model=model)
+        llm=OpenAI(model="gpt-4o-mini")
     )
     
     tools = [query_engine_tool]
     
     # Load or initialize chat store
-    chat_store = load_chat_store(persist_path)
+    chat_store = load_chat_store(CONVERSATION_FILE)
     
     # Initialize chat memory
     chat_memory = ChatMemoryBuffer.from_defaults(
-        token_limit=token_limit,
+        token_limit=3000,
         chat_store=chat_store,
-        chat_store_key=chat_store_key,
+        chat_store_key="user1",
     )
     
     # Initialize the chatbot agent with memory
