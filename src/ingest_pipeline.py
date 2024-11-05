@@ -1,31 +1,53 @@
-# ingest_pipeline.py
+from llama_index.core import SimpleDirectoryReader
+from llama_index.core.ingestion import IngestionPipeline, IngestionCache
+from llama_index.core.node_parser import TokenTextSplitter
+from llama_index.core.extractors import SummaryExtractor
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core import Settings
+from llama_index.llms.openai import OpenAI
+import openai
 import os
-from pathlib import Path
-#import fitz  # PyMuPDF for reading PDFs
-from llama_index.core import Document, SimpleDirectoryReader
+from dotenv import load_dotenv
+import streamlit as st
+from src.global_settings import STORAGE_PATH, FILES_PATH, CACHE_FILE
+from src.prompts import CUSTOM_SUMMARY_EXTRACT_TEMPLATE
 
-# Function to read PDFs and convert them to Document objects
-'''
-def read_pdf(file_path):
-    documents = []
-    with fitz.open(file_path) as pdf:
-        text = ""
-        for page_num in range(pdf.page_count):
-            page = pdf[page_num]
-            text += page.get_text()
-        documents.append(Document(text=text))
-    return documents
 
-# Function to load all documents from the specified directory
-def load_documents_from_folder(folder_path):
-    documents = []
-    for file_name in os.listdir(folder_path):
-        file_path = Path(folder_path) / file_name
-        if file_path.suffix == '.pdf':
-            documents.extend(read_pdf(file_path))
-    return documents
-'''
-def load_documents_from_folder(folder_path):
-    reader = SimpleDirectoryReader(folder_path)
-    documents = reader.load_data()
-    return documents
+load_dotenv()
+
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.2)
+
+def ingest_documents():
+    documents = SimpleDirectoryReader(
+        input_files=FILES_PATH, 
+        filename_as_id = True
+    ).load_data()
+    for doc in documents:
+        print(doc.id_)
+    
+    try: 
+        cached_hashes = IngestionCache.from_persist_path(
+            CACHE_FILE
+            )
+        print("Cache file found. Running using cache...")
+    except:
+        cached_hashes = ""
+        print("No cache file found. Running without cache...")
+    pipeline = IngestionPipeline(
+        transformations=[
+            TokenTextSplitter(
+                chunk_size=512, 
+                chunk_overlap=20
+            ),
+            SummaryExtractor(summaries=['self'], prompt_template=CUSTOM_SUMMARY_EXTRACT_TEMPLATE),
+            OpenAIEmbedding()
+        ],
+        cache=cached_hashes
+    )
+   
+    nodes = pipeline.run(documents=documents)
+    pipeline.cache.persist(CACHE_FILE)
+    
+    return nodes
