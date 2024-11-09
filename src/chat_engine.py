@@ -39,10 +39,9 @@ def initialize_chatbot(chat_store):
     query_tool= QueryEngineTool(
         query_engine= query_engine, 
         metadata=ToolMetadata(
-            name="dsm5",
+            name="CookBot",
             description=(
-                f"Cung cấp các thông tin liên quan đến các bệnh "
-                f"tâm thần theo tiêu chuẩn DSM5. Sử dụng câu hỏi văn bản thuần túy chi tiết làm đầu vào cho công cụ"
+                f"Ask me anything about Vietnamese, Korean, and Japanese cuisine!"
             ),
         )
     )

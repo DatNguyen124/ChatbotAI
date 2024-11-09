@@ -11,7 +11,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 @cl.on_chat_start
 async def chat_start():
-    await cl.Message("Welcome! Ask me anything about Vietnamese meals you want to cook").send()
+    await cl.Message("Welcome to our CookBot! Here, you can explore the rich culinary worlds of Vietnam, Korea, and Japan. Whether you’re looking for authentic recipes, step-by-step cooking directions, or a description of traditional dishes, I’m here to help you bring these vibrant flavors into your kitchen. Let’s get cooking!").send()
 
 @cl.on_message
 async def main(message: cl.Message):
