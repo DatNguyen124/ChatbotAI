@@ -12,3 +12,8 @@ pip install -r requirements.txt
 ```python
 chainlit run app.py
 ```
+### Lưu ý: Chạy lại data_builder.py khi có sách mới được thêm vào folder data/book_storage
+Hiện tại custom data đang được lưu trong folder data/book_storage.
+```python
+python data_builder.py
+```
