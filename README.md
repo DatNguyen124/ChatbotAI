@@ -8,6 +8,10 @@ OPENAI_API_KEY=your-api-key
 ```python
 pip install -r requirements.txt
 ```
+### Chạy data_builder.py khi chạy lần đầu
+```python
+python data_builder.py
+```
 ### Chạy ứng dụng
 ```python
 chainlit run app.py
